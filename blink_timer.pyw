@@ -115,30 +115,34 @@ def quit():
 	icon.stop()
 
 
-try:
-	image = Image.open("icon.png")
-except:
-	# fallback icon, hand drawn
-	image = Image.new("RGBA", (16, 16), color=None)
-	draw = ImageDraw.Draw(image)
-	draw.line([(7, 1), (7, 14)], width=4, fill="green")
-	draw.line([(1, 2), (14, 2)], width=4, fill="green")
+def run_timers():
+	try:
+		image = Image.open("icon.png")
+	except:
+		# fallback icon, hand drawn
+		image = Image.new("RGBA", (16, 16), color=None)
+		draw = ImageDraw.Draw(image)
+		draw.line([(7, 1), (7, 14)], width=4, fill="green")
+		draw.line([(1, 2), (14, 2)], width=4, fill="green")
 
-menu = Menu(
-	MenuItem("Timers status", timers_status, default=True),
-	MenuItem("Quit", quit)
-)
+	menu = Menu(
+		MenuItem("Timers status", timers_status, default=True),
+		MenuItem("Quit", quit)
+	)
 
-icon = Icon("Simple Timer", image, "Simple Timer", menu)
+	icon = Icon("Simple Timer", image, "Simple Timer", menu)
 
-if BLANK_SCREEN:
-	action = show_screen_overlay
-else:
-	action = icon.notify
+	if BLANK_SCREEN:
+		action = show_screen_overlay
+	else:
+		action = icon.notify
 
-for timer_data in TIMERS_DATA:
-	timer = PerpetualTimer(timer_data[0], action, timer_data[1])
-	timers.append(timer)
-	timer.start()
+	for timer_data in TIMERS_DATA:
+		timer = PerpetualTimer(timer_data[0], action, timer_data[1])
+		timers.append(timer)
+		timer.start()
 
-icon.run()
+	icon.run()
+
+if __name__ == "__main__":
+	run_timers()

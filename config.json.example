@@ -1,0 +1,14 @@
+[
+	{
+		"title": "Blink",
+		"period": 60
+	},
+	{
+		"title": "Look far away",
+		"period": 1200
+	},
+	{
+		"title": "Stand up, walk around",
+		"period": 3600
+	}
+]

@@ -19,3 +19,9 @@ Many "PC health" programs exist, however they are often overcomplicated and thei
 PYSTRAY_BACKEND=gtk python3 blink_timer.pyw
 ```
 Select backend accordingly.
+
+# Configuration
+```
+mkdir -p ~/.config/blinktimer
+cp config.json.example ~/.config/blinktimer/config.json
+```

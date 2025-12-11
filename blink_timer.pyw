@@ -6,14 +6,37 @@ from tkinter import Tk, Button, N, E, W, S, Toplevel
 import time
 import gc
 from screeninfo import get_monitors
+from platformdirs import user_config_dir
+import os
+import json
+
+
+APP_NAME = "blinktimer"
+CONFIG_FILENAME = "config.json"
 
 BREAK_TIME = 2
 
+JSON_KEY_TITLE = "title"
+JSON_KEY_PERIOD = "period"
+
 geometries = [(mon.width, mon.height, mon.x, mon.y) for mon in get_monitors()]
 
-TIMERS_DATA = [
-	(60, "Blink")
+class TimerConfig:
+	def __init__(self, title: str, period_s: int):
+		self.title = title
+		self.period_s = period_s
+
+
+	@classmethod
+	def fromobject(cls, obj: object):
+		return TimerConfig(obj[JSON_KEY_TITLE],
+						   obj[JSON_KEY_PERIOD])
+
+
+DEFAULT_CONFIG = [
+	TimerConfig("Blink", 60),
 ]
+
 
 class ScreenOverlay(Tk):
 	"""Displays black screens with white, centered text and a countdown timer.
@@ -79,11 +102,11 @@ def seconds_to_hh_mm_ss(seconds: int) -> str:
 
 
 class PerpetualTimer(Thread):
-	def __init__(self, duration: int, name: str):
+	def __init__(self, data: TimerConfig):
 		Thread.__init__(self)
 		self.stopped = Event()
-		self.duration = duration
-		self.name = name
+		self.duration = data.period_s
+		self.name = data.title
 		self.start_time = datetime.now()
 
 	def run(self):
@@ -113,7 +136,7 @@ def quit():
 	icon.stop()
 
 
-def run_timers():
+def run_timers(timer_config: list[TimerConfig]):
 	try:
 		image = Image.open("icon.png")
 	except:
@@ -130,12 +153,53 @@ def run_timers():
 
 	icon = Icon("Simple Timer", image, "Simple Timer", menu)
 
-	for timer_data in TIMERS_DATA:
-		timer = PerpetualTimer(timer_data[0], timer_data[1])
+	for timer_data in timer_config:
+		timer = PerpetualTimer(timer_data)
 		timers.append(timer)
 		timer.start()
 
 	icon.run()
 
+
+def load_config() -> list[TimerConfig]:
+	"""
+	Loads configuration from a file stored in the standard configuration path.
+	If the file does not exist or is invalid, returns default configuration.
+
+	@returns list of timer configs
+	"""
+	config_dir = user_config_dir(APP_NAME)
+	config_path = os.path.join(config_dir, CONFIG_FILENAME)
+
+	if not os.path.exists(config_path):
+		print("Config does not exist, using default config")
+		return DEFAULT_CONFIG
+
+	timers = []
+	try:
+		with open(config_path, "r") as f:
+			loaded = json.load(f)
+
+			if not isinstance(loaded, list):
+				print("Invalid config file, using default config")
+				return DEFAULT_CONFIG
+
+			for entry in loaded:
+				try:
+					timers.append(TimerConfig.fromobject(entry))
+				except (KeyError, TypeError):
+					print("Invalid timer")
+	except json.decoder.JSONDecodeError:
+		print("Invalid config file, using default config")
+		return DEFAULT_CONFIG
+
+	if len(timers) == 0:
+		print("No valid timers defined, using default config")
+		return DEFAULT_CONFIG
+
+	return timers
+
+
 if __name__ == "__main__":
-	run_timers()
+	timer_config = load_config()
+	run_timers(timer_config)

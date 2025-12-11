@@ -7,7 +7,6 @@ import time
 import gc
 from screeninfo import get_monitors
 
-BLANK_SCREEN = True # False = show a notification
 BREAK_TIME = 2
 
 geometries = [(mon.width, mon.height, mon.x, mon.y) for mon in get_monitors()]
@@ -80,17 +79,16 @@ def seconds_to_hh_mm_ss(seconds: int) -> str:
 
 
 class PerpetualTimer(Thread):
-	def __init__(self, duration: int, func, name: str):
+	def __init__(self, duration: int, name: str):
 		Thread.__init__(self)
 		self.stopped = Event()
 		self.duration = duration
-		self.func = func
-		self.name = name # sorry, you just get a single arg
+		self.name = name
 		self.start_time = datetime.now()
 
 	def run(self):
 		while not self.stopped.wait(self.duration):
-			self.func(self.name)
+			show_screen_overlay(self.name)
 			self.start_time = datetime.now()
 
 	def cancel(self):
@@ -132,13 +130,8 @@ def run_timers():
 
 	icon = Icon("Simple Timer", image, "Simple Timer", menu)
 
-	if BLANK_SCREEN:
-		action = show_screen_overlay
-	else:
-		action = icon.notify
-
 	for timer_data in TIMERS_DATA:
-		timer = PerpetualTimer(timer_data[0], action, timer_data[1])
+		timer = PerpetualTimer(timer_data[0], timer_data[1])
 		timers.append(timer)
 		timer.start()
 

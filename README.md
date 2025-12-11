@@ -13,3 +13,9 @@ Many "PC health" programs exist, however they are often overcomplicated and thei
 * Click the screen to dismiss obstruction
 * Interaction via a tray icon
 * Portable - the only real dependency is [pystray](https://pystray.readthedocs.io/en/latest/usage.html#selecting-a-backend)
+
+# Running
+```bash
+PYSTRAY_BACKEND=gtk python3 blink_timer.pyw
+```
+Select backend accordingly.

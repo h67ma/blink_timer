@@ -150,9 +150,7 @@ class App:
 
 
 	def timers_status(self):
-		status_str = ""
-		for timer in self._timers:
-			status_str += str(timer) + '\n'
+		status_str = '\n'.join([str(timer) for timer in self._timers])
 		self._icon.notify(status_str, title="Upcoming timers")
 
 

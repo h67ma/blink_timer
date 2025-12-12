@@ -12,6 +12,7 @@ import json
 
 
 APP_NAME = "blinktimer"
+APP_TITLE = "Blink Timer"
 CONFIG_FILENAME = "config.json"
 
 JSON_KEY_TITLE = "title"
@@ -127,44 +128,49 @@ class PerpetualTimer(Thread):
 		return "%s\t%s (every %s)" % (seconds_to_hh_mm_ss(self.get_remaining_seconds()), self._config.title, seconds_to_hh_mm_ss(self._config.period_s))
 
 
-timers = []
+class App:
+	def __init__(self):
+		self._timers = []
 
-def timers_status():
-	status_str = ""
-	for timer in timers:
-		status_str += str(timer) + '\n'
-	icon.notify(status_str, title="Upcoming timers")
+		try:
+			image = Image.open("icon.png")
+		except:
+			# fallback icon, hand drawn
+			image = Image.new("RGBA", (16, 16), color=None)
+			draw = ImageDraw.Draw(image)
+			draw.line([(7, 1), (7, 14)], width=4, fill="green")
+			draw.line([(1, 2), (14, 2)], width=4, fill="green")
+
+		menu = Menu(
+			MenuItem("Timers status", self.timers_status, default=True),
+			MenuItem("Quit", self.quit)
+		)
+
+		self._icon = Icon(APP_TITLE, image, APP_TITLE, menu)
 
 
-def quit():
-	for timer in timers:
-		timer.cancel()
-	icon.stop()
+	def timers_status(self):
+		status_str = ""
+		for timer in self._timers:
+			status_str += str(timer) + '\n'
+		self._icon.notify(status_str, title="Upcoming timers")
 
 
-def run_timers(timer_config: list[TimerConfig]):
-	try:
-		image = Image.open("icon.png")
-	except:
-		# fallback icon, hand drawn
-		image = Image.new("RGBA", (16, 16), color=None)
-		draw = ImageDraw.Draw(image)
-		draw.line([(7, 1), (7, 14)], width=4, fill="green")
-		draw.line([(1, 2), (14, 2)], width=4, fill="green")
+	def quit(self):
+		for timer in self._timers:
+			timer.cancel()
+		self._icon.stop()
 
-	menu = Menu(
-		MenuItem("Timers status", timers_status, default=True),
-		MenuItem("Quit", quit)
-	)
 
-	icon = Icon("Simple Timer", image, "Simple Timer", menu)
+	def run_timers(self, timer_config: list[TimerConfig]):
+		self._timers.clear()
 
-	for timer_data in timer_config:
-		timer = PerpetualTimer(timer_data)
-		timers.append(timer)
-		timer.start()
+		for timer_data in timer_config:
+			timer = PerpetualTimer(timer_data)
+			self._timers.append(timer)
+			timer.start()
 
-	icon.run()
+		self._icon.run()
 
 
 def load_config() -> list[TimerConfig]:
@@ -207,5 +213,6 @@ def load_config() -> list[TimerConfig]:
 
 
 if __name__ == "__main__":
-	timer_config = load_config()
-	run_timers(timer_config)
+	app = App()
+	config = load_config()
+	app.run_timers(config)

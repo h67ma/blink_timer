@@ -1,14 +1,17 @@
 [
 	{
 		"title": "Blink",
-		"period": 60
+		"period": 60,
+		"duration": 2
 	},
 	{
 		"title": "Look far away",
-		"period": 1200
+		"period": 1200,
+		"duration": 15
 	},
 	{
 		"title": "Stand up, walk around",
-		"period": 3600
+		"period": 3600,
+		"duration": 60
 	}
 ]

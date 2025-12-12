@@ -14,27 +14,28 @@ import json
 APP_NAME = "blinktimer"
 CONFIG_FILENAME = "config.json"
 
-BREAK_TIME = 2
-
 JSON_KEY_TITLE = "title"
 JSON_KEY_PERIOD = "period"
+JSON_KEY_DURATION = "duration"
 
 geometries = [(mon.width, mon.height, mon.x, mon.y) for mon in get_monitors()]
 
 class TimerConfig:
-	def __init__(self, title: str, period_s: int):
+	def __init__(self, title: str, period_s: int, duration_s: int):
 		self.title = title
 		self.period_s = period_s
+		self.duration_s = duration_s
 
 
 	@classmethod
 	def fromobject(cls, obj: object):
 		return TimerConfig(obj[JSON_KEY_TITLE],
-						   obj[JSON_KEY_PERIOD])
+						   obj[JSON_KEY_PERIOD],
+						   obj[JSON_KEY_DURATION])
 
 
 DEFAULT_CONFIG = [
-	TimerConfig("Blink", 60),
+	TimerConfig("Blink", 60, 2),
 ]
 
 
@@ -85,8 +86,8 @@ class ScreenOverlay(Tk):
 		Tk.destroy(self) # dead and cold, a story told!
 
 
-def show_screen_overlay(screen_text):
-	overlay = ScreenOverlay(screen_text, BREAK_TIME)
+def show_screen_overlay(screen_text: str, duration_s: int):
+	overlay = ScreenOverlay(screen_text, duration_s)
 	overlay.mainloop()
 
 	# gc badness to avoid spooky multithreading errors
@@ -102,23 +103,28 @@ def seconds_to_hh_mm_ss(seconds: int) -> str:
 
 
 class PerpetualTimer(Thread):
-	def __init__(self, data: TimerConfig):
+	def __init__(self, config: TimerConfig):
 		Thread.__init__(self)
-		self.stopped = Event()
-		self.duration = data.period_s
-		self.name = data.title
-		self.start_time = datetime.now()
+		self._stopped = Event()
+		self._config = config
+		self._start_time = datetime.now()
 
 	def run(self):
-		while not self.stopped.wait(self.duration):
-			show_screen_overlay(self.name)
-			self.start_time = datetime.now()
+		while not self._stopped.wait(self._config.period_s):
+			show_screen_overlay(self._config.title, self._config.duration_s)
+			self._start_time = datetime.now()
+
 
 	def cancel(self):
-		self.stopped.set()
+		self._stopped.set()
+
 
 	def get_remaining_seconds(self) -> int:
-		return self.duration - (datetime.now() - self.start_time).seconds
+		return self._config.period_s - (datetime.now() - self._start_time).seconds
+
+
+	def __str__(self):
+		return "%s\t%s (every %s)" % (seconds_to_hh_mm_ss(self.get_remaining_seconds()), self._config.title, seconds_to_hh_mm_ss(self._config.period_s))
 
 
 timers = []
@@ -126,7 +132,7 @@ timers = []
 def timers_status():
 	status_str = ""
 	for timer in timers:
-		status_str += "%s\t%s (every %s)\n" % (seconds_to_hh_mm_ss(timer.get_remaining_seconds()), timer.name, seconds_to_hh_mm_ss(timer.duration))
+		status_str += str(timer) + '\n'
 	icon.notify(status_str, title="Upcoming timers")
 
 

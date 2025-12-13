@@ -132,21 +132,23 @@ class App:
 	def __init__(self):
 		self._timers = []
 
-		try:
-			image = Image.open("icon.png")
-		except:
-			# fallback icon, hand drawn
-			image = Image.new("RGBA", (16, 16), color=None)
-			draw = ImageDraw.Draw(image)
-			draw.line([(7, 1), (7, 14)], width=4, fill="green")
-			draw.line([(1, 2), (14, 2)], width=4, fill="green")
-
 		menu = Menu(
 			MenuItem("Timers status", self.timers_status, default=True),
 			MenuItem("Quit", self.quit)
 		)
 
-		self._icon = Icon(APP_TITLE, image, APP_TITLE, menu)
+		self._icon = Icon(APP_TITLE, self._make_icon(), APP_TITLE, menu)
+
+
+	@staticmethod
+	def _make_icon() -> Image.Image:
+		image = Image.new("RGBA", (32, 32), color=None)
+		draw = ImageDraw.Draw(image)
+		draw.ellipse((0, 0, 31, 31), fill="#f3f0f3", width=0)
+		draw.ellipse((4, 4, 27, 27), fill="#ee4242", width=0)
+		draw.ellipse((9, 9, 23, 23), fill="#0f0f0f", width=0)
+		draw.ellipse((17, 9, 23, 15), fill="#f3f0f3", width=0)
+		return image
 
 
 	def timers_status(self):

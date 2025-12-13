@@ -18,65 +18,72 @@ CONFIG_FILENAME = "config.json"
 JSON_KEY_TITLE = "title"
 JSON_KEY_PERIOD = "period"
 JSON_KEY_DURATION = "duration"
+JSON_KEY_FG_COLOR = "foreground"
+JSON_KEY_BG_COLOR = "background"
 
 
 class TimerConfig:
-	def __init__(self, title: str, period_s: int, duration_s: int):
+	def __init__(self, title: str, period_s: int, duration_s: int, foreground_color: str, background_color: str):
 		self.title = title
 		self.period_s = period_s
 		self.duration_s = duration_s
+		self.foreground_color = foreground_color
+		self.background_color = background_color
 
 
 	@classmethod
 	def fromobject(cls, obj: object):
 		return TimerConfig(obj[JSON_KEY_TITLE],
 						   obj[JSON_KEY_PERIOD],
-						   obj[JSON_KEY_DURATION])
+						   obj[JSON_KEY_DURATION],
+						   obj[JSON_KEY_FG_COLOR],
+						   obj[JSON_KEY_BG_COLOR])
 
 
 DEFAULT_CONFIG = [
-	TimerConfig("Blink", 60, 2),
+	TimerConfig("Blink", 60, 2, "#000", "#FFF"),
 ]
 
 
 class ScreenOverlay(Tk):
 	"""Displays black screens with white, centered text and a countdown timer.
-	The windows will be dismissed on mouse click or after break_time_s elapses."""
+	The windows will be dismissed on mouse click or after timer elapses."""
 
-	def __init__(self, screen_text, break_time_s, geometries):
+	def __init__(self, config: TimerConfig, geometries):
 		Tk.__init__(self)
 		self.start_time = time.time()
-		self.screen_text = screen_text
-		self.break_time_s = break_time_s
+		self._config = config
 
 		self.buttons = []
 		for geo in geometries:
 			# create a window for each screen
 			win = Toplevel()
 			win.geometry("%dx%d+%d+%d" % (geo[0], geo[1], geo[2], geo[3]))
-			win.configure(bg="black")
+			win.configure(bg=self._config.background_color)
 			win.columnconfigure(0, weight=1)
 			win.rowconfigure(0, weight=1)
-			win.title(screen_text)
+			win.title(self._config.title)
 			#win.attributes("-fullscreen", True) # makes all windows show fullscreen on the main screen
 			#win.state("zoomed") # steals focus - unacceptable
 			#win.attributes("-disabled", True) # makes the window unclickable and not stealing focus, but then can't press the button
 			win.overrideredirect(True)
 			win.attributes("-topmost", True)
 
-			btn = Button(win, bg="black", fg="white", activebackground="black", activeforeground="white", borderwidth=0, highlightthickness=0, font=("Arial", 25), command=self.destroy)
+			btn = Button(win, bg=self._config.background_color, fg=self._config.foreground_color,
+						 activebackground=self._config.background_color, activeforeground=self._config.foreground_color,
+						 borderwidth=0, highlightthickness=0, font=("Arial", 25), command=self.destroy)
 			btn.grid(sticky=N+E+W+S)
 			self.buttons.append(btn)
 
 		self.withdraw() # hide the empty root window
 
-		self.timeout_after_id = self.after(break_time_s*1000, self.destroy)
+		self.timeout_after_id = self.after(self._config.duration_s*1000, self.destroy)
 		self.update_btn_rec()
 
 	def update_btn_rec(self):
-		remaining_s = self.break_time_s - int(time.time() - self.start_time)
+		remaining_s = self._config.duration_s - int(time.time() - self.start_time)
 		for btn in self.buttons:
-			btn.configure(text="%s\n(%d)" % (self.screen_text, remaining_s))
+			btn.configure(text="%s\n(%d)" % (self._config.title, remaining_s))
 		self.timer_after_id = self.after(1000, self.update_btn_rec)
 
 	def destroy(self):
@@ -102,8 +109,8 @@ class PerpetualTimer(Thread):
 		self._geometries = geometries
 
 
-	def _show_screen_overlay(self, screen_text: str, duration_s: int):
-		overlay = ScreenOverlay(screen_text, duration_s, self._geometries)
+	def _show_screen_overlay(self):
+		overlay = ScreenOverlay(self._config, self._geometries)
 		overlay.mainloop()
 
 		# gc badness to avoid spooky multithreading errors
@@ -113,7 +120,7 @@ class PerpetualTimer(Thread):
 
 	def run(self):
 		while not self._stopped.wait(self._config.period_s):
-			self._show_screen_overlay(self._config.title, self._config.duration_s)
+			self._show_screen_overlay()
 			self._start_time = datetime.now()
 
 

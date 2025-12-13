@@ -8,7 +8,7 @@ Many "PC health" programs exist, however they are often overcomplicated and thei
 * Define multiple timers
 * Timers run in a loop
 * Obstructs all screens with a solid color when a timer expires
-* Configurable obstruction delay and timer period
+* Configurable obstruction delay, period and colors
 * Continue typing while the screen obstruction is shown (no focus stealing)
 * Click the screen to dismiss obstruction
 * Interaction via a tray icon

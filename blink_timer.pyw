@@ -19,7 +19,6 @@ JSON_KEY_TITLE = "title"
 JSON_KEY_PERIOD = "period"
 JSON_KEY_DURATION = "duration"
 
-geometries = [(mon.width, mon.height, mon.x, mon.y) for mon in get_monitors()]
 
 class TimerConfig:
 	def __init__(self, title: str, period_s: int, duration_s: int):
@@ -44,7 +43,7 @@ class ScreenOverlay(Tk):
 	"""Displays black screens with white, centered text and a countdown timer.
 	The windows will be dismissed on mouse click or after break_time_s elapses."""
 
-	def __init__(self, screen_text, break_time_s):
+	def __init__(self, screen_text, break_time_s, geometries):
 		Tk.__init__(self)
 		self.start_time = time.time()
 		self.screen_text = screen_text
@@ -87,15 +86,6 @@ class ScreenOverlay(Tk):
 		Tk.destroy(self) # dead and cold, a story told!
 
 
-def show_screen_overlay(screen_text: str, duration_s: int):
-	overlay = ScreenOverlay(screen_text, duration_s)
-	overlay.mainloop()
-
-	# gc badness to avoid spooky multithreading errors
-	overlay = None
-	gc.collect()
-
-
 def seconds_to_hh_mm_ss(seconds: int) -> str:
 	out_h = int(seconds / 3600)
 	out_m = int((seconds % 3600) / 60)
@@ -104,15 +94,26 @@ def seconds_to_hh_mm_ss(seconds: int) -> str:
 
 
 class PerpetualTimer(Thread):
-	def __init__(self, config: TimerConfig):
+	def __init__(self, config: TimerConfig, geometries: list[tuple[int, int, int, int]]):
 		Thread.__init__(self)
 		self._stopped = Event()
 		self._config = config
 		self._start_time = datetime.now()
+		self._geometries = geometries
+
+
+	def _show_screen_overlay(self, screen_text: str, duration_s: int):
+		overlay = ScreenOverlay(screen_text, duration_s, self._geometries)
+		overlay.mainloop()
+
+		# gc badness to avoid spooky multithreading errors
+		overlay = None
+		gc.collect()
+
 
 	def run(self):
 		while not self._stopped.wait(self._config.period_s):
-			show_screen_overlay(self._config.title, self._config.duration_s)
+			self._show_screen_overlay(self._config.title, self._config.duration_s)
 			self._start_time = datetime.now()
 
 
@@ -134,10 +135,13 @@ class App:
 
 		menu = Menu(
 			MenuItem("Timers status", self.timers_status, default=True),
+			MenuItem("Update screen geometry", self._update_screen_geometries),
 			MenuItem("Quit", self.quit)
 		)
 
 		self._icon = Icon(APP_TITLE, self._make_icon(), APP_TITLE, menu)
+		self._geometries = []
+		self._update_screen_geometries()
 
 
 	@staticmethod
@@ -149,6 +153,11 @@ class App:
 		draw.ellipse((9, 9, 23, 23), fill="#0f0f0f", width=0)
 		draw.ellipse((17, 9, 23, 15), fill="#f3f0f3", width=0)
 		return image
+
+
+	def _update_screen_geometries(self):
+		self._geometries.clear()
+		self._geometries.extend([(mon.width, mon.height, mon.x, mon.y) for mon in get_monitors()])
 
 
 	def timers_status(self):
@@ -166,7 +175,7 @@ class App:
 		self._timers.clear()
 
 		for timer_data in timer_config:
-			timer = PerpetualTimer(timer_data)
+			timer = PerpetualTimer(timer_data, self._geometries)
 			self._timers.append(timer)
 			timer.start()
 

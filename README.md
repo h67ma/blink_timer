@@ -9,7 +9,7 @@ Many "PC health" programs exist, however they are often overcomplicated and thei
 * Timers run in a loop
 * Obstructs all screens with a solid color when a timer expires
 * Configurable obstruction delay and timer period
-* Typing still works while the screen obstruction is shown
+* Continue typing while the screen obstruction is shown (no focus stealing)
 * Click the screen to dismiss obstruction
 * Interaction via a tray icon
 * Portable - the only real dependency is [pystray](https://pystray.readthedocs.io/en/latest/usage.html#selecting-a-backend)
@@ -21,7 +21,7 @@ PYSTRAY_BACKEND=gtk python3 blink_timer.pyw
 Select backend accordingly.
 
 # Configuration
-```
+```bash
 mkdir -p ~/.config/blinktimer
 cp config.json.example ~/.config/blinktimer/config.json
 ```

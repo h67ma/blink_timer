@@ -55,10 +55,10 @@ class ScreenOverlay(Tk):
 
 	def __init__(self, config: TimerConfig, geometries):
 		Tk.__init__(self)
-		self.start_time = time.time()
+		self._start_time = time.time()
 		self._config = config
 
-		self.buttons = []
+		self._buttons = []
 		for geo in geometries:
 			# create a window for each screen
 			win = Toplevel()
@@ -75,25 +75,25 @@ class ScreenOverlay(Tk):
 
 			btn = Button(win, bg=self._config.background_color, fg=self._config.foreground_color,
 						 activebackground=self._config.background_color, activeforeground=self._config.foreground_color,
-						 borderwidth=0, highlightthickness=0, font=("Arial", 25), command=self.destroy)
+						 borderwidth=0, highlightthickness=0, font=("Arial", 25), command=self._destroy)
 			btn.grid(sticky=N+E+W+S)
-			self.buttons.append(btn)
+			self._buttons.append(btn)
 
 		self.withdraw() # hide the empty root window
 
-		self.timeout_after_id = self.after(self._config.duration_s*1000, self.destroy)
-		self.update_btn_rec()
+		self._timeout_after_id = self.after(self._config.duration_s*1000, self._destroy)
+		self._update_btn_rec()
 
-	def update_btn_rec(self):
-		remaining_s = self._config.duration_s - int(time.time() - self.start_time)
-		for btn in self.buttons:
+	def _update_btn_rec(self):
+		remaining_s = self._config.duration_s - int(time.time() - self._start_time)
+		for btn in self._buttons:
 			btn.configure(text="%s\n(%d)" % (self._config.title, remaining_s))
-		self.timer_after_id = self.after(1000, self.update_btn_rec)
+		self._timer_after_id = self.after(1000, self._update_btn_rec)
 
-	def destroy(self):
+	def _destroy(self):
 		# clear timers & kill yourself
-		self.after_cancel(self.timeout_after_id)
-		self.after_cancel(self.timer_after_id)
+		self.after_cancel(self._timeout_after_id)
+		self.after_cancel(self._timer_after_id)
 		Tk.destroy(self) # dead and cold, a story told!
 
 
@@ -145,9 +145,9 @@ class App:
 		self._timers = []
 
 		menu = Menu(
-			MenuItem("Timers status", self.timers_status, default=True),
+			MenuItem("Timers status", self._timers_status, default=True),
 			MenuItem("Update screen geometry", self._update_screen_geometries),
-			MenuItem("Quit", self.quit)
+			MenuItem("Quit", self._quit)
 		)
 
 		self._icon = Icon(APP_TITLE, self._make_icon(), APP_TITLE, menu)
@@ -171,12 +171,12 @@ class App:
 		self._geometries.extend([(mon.width, mon.height, mon.x, mon.y) for mon in get_monitors()])
 
 
-	def timers_status(self):
+	def _timers_status(self):
 		status_str = '\n'.join([str(timer) for timer in self._timers])
 		self._icon.notify(status_str, title="Upcoming timers")
 
 
-	def quit(self):
+	def _quit(self):
 		for timer in self._timers:
 			timer.cancel()
 		self._icon.stop()

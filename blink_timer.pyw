@@ -46,8 +46,12 @@ DEFAULT_CONFIG = [
 
 
 class ScreenOverlay(Tk):
-	"""Displays black screens with white, centered text and a countdown timer.
-	The windows will be dismissed on mouse click or after timer elapses."""
+	"""
+	Displays black screens with white, centered text and a countdown timer.
+	The windows will be dismissed on mouse click or after timer elapses.
+	"""
+	# TODO? easy_dismiss option that (disabled) shows a small clickable square in a random place
+	# instead of the whole screen being clickable
 
 	def __init__(self, config: TimerConfig, geometries):
 		Tk.__init__(self)

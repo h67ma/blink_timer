@@ -41,7 +41,7 @@ class TimerConfig:
 
 
 DEFAULT_CONFIG = [
-	TimerConfig("Blink", 60, 2, "#000", "#FFF"),
+	TimerConfig("Blink", 60, 2, "#FFF", "#000"),
 ]
 
 

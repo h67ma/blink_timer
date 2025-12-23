@@ -25,3 +25,5 @@ Select backend accordingly.
 mkdir -p ~/.config/blinktimer
 cp config.json.example ~/.config/blinktimer/config.json
 ```
+
+On Windows the path should be `%localappdata%\blinktimer\blinktimer\`

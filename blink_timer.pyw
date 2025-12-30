@@ -6,43 +6,11 @@ from tkinter import Tk, Button, N, E, W, S, Toplevel
 import time
 import gc
 from screeninfo import get_monitors
-from platformdirs import user_config_dir
-import os
-import json
+from config import TimerConfig, DEFAULT_CONFIG, load_config
+from util import seconds_to_hh_mm_ss
 
 
-APP_NAME = "blinktimer"
 APP_TITLE = "Blink Timer"
-CONFIG_FILENAME = "config.json"
-
-JSON_KEY_TITLE = "title"
-JSON_KEY_PERIOD = "period"
-JSON_KEY_DURATION = "duration"
-JSON_KEY_FG_COLOR = "foreground"
-JSON_KEY_BG_COLOR = "background"
-
-
-class TimerConfig:
-	def __init__(self, title: str, period_s: int, duration_s: int, foreground_color: str, background_color: str):
-		self.title = title
-		self.period_s = period_s
-		self.duration_s = duration_s
-		self.foreground_color = foreground_color
-		self.background_color = background_color
-
-
-	@classmethod
-	def fromobject(cls, obj: object):
-		return TimerConfig(obj[JSON_KEY_TITLE],
-						   obj[JSON_KEY_PERIOD],
-						   obj[JSON_KEY_DURATION],
-						   obj[JSON_KEY_FG_COLOR],
-						   obj[JSON_KEY_BG_COLOR])
-
-
-DEFAULT_CONFIG = [
-	TimerConfig("Blink", 60, 2, "#FFF", "#000"),
-]
 
 
 class ScreenOverlay(Tk):
@@ -95,13 +63,6 @@ class ScreenOverlay(Tk):
 		self.after_cancel(self._timeout_after_id)
 		self.after_cancel(self._timer_after_id)
 		Tk.destroy(self) # dead and cold, a story told!
-
-
-def seconds_to_hh_mm_ss(seconds: int) -> str:
-	out_h = int(seconds / 3600)
-	out_m = int((seconds % 3600) / 60)
-	out_s = int(seconds % 60)
-	return "%d:%02d:%02d" % (out_h, out_m, out_s)
 
 
 class PerpetualTimer(Thread):
@@ -191,45 +152,6 @@ class App:
 			timer.start()
 
 		self._icon.run()
-
-
-def load_config() -> list[TimerConfig]:
-	"""
-	Loads configuration from a file stored in the standard configuration path.
-	If the file does not exist or is invalid, returns default configuration.
-
-	@returns list of timer configs
-	"""
-	config_dir = user_config_dir(APP_NAME)
-	config_path = os.path.join(config_dir, CONFIG_FILENAME)
-
-	if not os.path.exists(config_path):
-		print("Config does not exist, using default config")
-		return DEFAULT_CONFIG
-
-	timers = []
-	try:
-		with open(config_path, "r") as f:
-			loaded = json.load(f)
-
-			if not isinstance(loaded, list):
-				print("Invalid config file, using default config")
-				return DEFAULT_CONFIG
-
-			for entry in loaded:
-				try:
-					timers.append(TimerConfig.fromobject(entry))
-				except (KeyError, TypeError):
-					print("Invalid timer")
-	except json.decoder.JSONDecodeError:
-		print("Invalid config file, using default config")
-		return DEFAULT_CONFIG
-
-	if len(timers) == 0:
-		print("No valid timers defined, using default config")
-		return DEFAULT_CONFIG
-
-	return timers
 
 
 if __name__ == "__main__":

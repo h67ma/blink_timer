@@ -15,6 +15,12 @@ JSON_KEY_BG_COLOR = "background"
 
 class TimerConfig:
 	def __init__(self, title: str, period_s: int, duration_s: int, foreground_color: str, background_color: str):
+		if period_s <= 0 or duration_s <= 0:
+			raise Exception("Timer period and duration must be greater than 0")
+
+		if period_s <= duration_s:
+			raise Exception("Timer duration (%d) cannot be greater than period (%d)" % (period_s, duration_s))
+
 		self.title = title
 		self.period_s = period_s
 		self.duration_s = duration_s
@@ -62,8 +68,8 @@ def load_config() -> list[TimerConfig]:
 			for entry in loaded:
 				try:
 					timers.append(TimerConfig.fromobject(entry))
-				except (KeyError, TypeError):
-					print("Invalid timer")
+				except Exception as ex:
+					print("Invalid timer:", ex)
 	except json.decoder.JSONDecodeError:
 		print("Invalid config file, using default config")
 		return DEFAULT_CONFIG

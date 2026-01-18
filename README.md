@@ -10,9 +10,13 @@ Many "PC health" programs exist, however they are often overcomplicated and thei
 * Obstructs all screens with a solid color when a timer expires
 * Configurable obstruction delay, period and colors
 * Continue typing while the screen obstruction is shown (no focus stealing)
+* If multiple timer events overlap, the one with the highest priority (defined first in config file) is only shown, others rescheduled
 * Click the screen to dismiss obstruction
 * Interaction via a tray icon
 * Portable - the only real dependency is [pystray](https://pystray.readthedocs.io/en/latest/usage.html#selecting-a-backend)
+
+# Accuracy
+Delays should be good enough for the script's intended purpose, but are not meant for precise time measurements - exact times might be off by up to 1 second.
 
 # Running
 ```bash

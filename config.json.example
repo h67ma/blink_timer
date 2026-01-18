@@ -1,10 +1,10 @@
 [
 	{
-		"title": "Blink",
-		"period": 60,
-		"duration": 2,
+		"title": "Stand up, walk around",
+		"period": 3600,
+		"duration": 60,
 		"foreground": "#FFF",
-		"background": "#000"
+		"background": "#900"
 	},
 	{
 		"title": "Look far away",
@@ -14,10 +14,10 @@
 		"background": "#080"
 	},
 	{
-		"title": "Stand up, walk around",
-		"period": 3600,
-		"duration": 60,
+		"title": "Blink",
+		"period": 60,
+		"duration": 2,
 		"foreground": "#FFF",
-		"background": "#900"
+		"background": "#000"
 	}
 ]

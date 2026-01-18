@@ -65,9 +65,16 @@ def load_config() -> list[TimerConfig]:
 				print("Invalid config file, using default config")
 				return DEFAULT_CONFIG
 
+			last_duration = None
 			for entry in loaded:
 				try:
-					timers.append(TimerConfig.fromobject(entry))
+					new_timer = TimerConfig.fromobject(entry)
+					if last_duration is not None and new_timer.duration_s > last_duration:
+						print("Lower priority timer cannot have duration longer than higher priority one (%d > %d)" % (new_timer.duration_s, last_duration))
+						continue
+
+					last_duration = new_timer.duration_s
+					timers.append(new_timer)
 				except Exception as ex:
 					print("Invalid timer:", ex)
 	except json.decoder.JSONDecodeError:

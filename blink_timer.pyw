@@ -210,6 +210,7 @@ class TimersThread(Thread):
 
 class App:
 	def __init__(self, timers_config: list[TimerConfig]):
+		# TODO? add an option to pause timers for X minutes (configurable)
 		menu = Menu(
 			MenuItem("Timers status", self._timers_status, default=True),
 			MenuItem("Update screen geometry", self._update_screen_geometries),

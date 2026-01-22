@@ -15,7 +15,11 @@ Many "PC health" programs exist, however they are often overcomplicated and thei
 * Interaction via a tray icon
 * Portable - the only real dependency is [pystray](https://pystray.readthedocs.io/en/latest/usage.html#selecting-a-backend)
 
-# Accuracy
+# Caveats
+## Hibernation/sleep effect
+Due to the script's design, pausing it for longer than 1 second (e.g. putting PC to sleep) will break timers that would've occurred during that pause duration. These timers will show every second. In this case, use the "Reset timers" options in icon menu" or relaunch the script.
+
+## Accuracy
 Delays should be good enough for the script's intended purpose, but are not meant for precise time measurements - exact times might be off by up to 1 second.
 
 # Running

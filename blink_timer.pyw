@@ -71,11 +71,15 @@ class ScreenOverlay(Tk):
 class Timer:
 	def __init__(self, config: TimerConfig, timestamp: int):
 		self.config = config
-		self.next_time = timestamp + config.period_s
+		self.reset(timestamp)
 
 
 	def __str__(self):
 		return "%s\t%s (every %s)" % (seconds_to_hh_mm_ss(self.next_time - timestamp()), self.config.title, seconds_to_hh_mm_ss(self.config.period_s))
+
+
+	def reset(self, timestamp: int):
+		self.next_time = timestamp + self.config.period_s
 
 
 	def reschedule(self):
@@ -91,7 +95,8 @@ class Timer:
 class TimerMessage(Enum):
 	STATUS = 1
 	UPDATE_GEOMETRY = 2
-	QUIT = 3
+	RESET_TIMERS = 3
+	QUIT = 4
 
 
 # events sent to TimersThread. valid values are TimerMessage
@@ -146,6 +151,11 @@ class TimersThread(Thread):
 						main_event_queue.put(status_str)
 					elif event == TimerMessage.UPDATE_GEOMETRY:
 						self._update_geometries()
+					elif event == TimerMessage.RESET_TIMERS:
+						now = timestamp()
+						for timer in self._timers:
+							timer.reset(now)
+						self._reschedule_covered_timers()
 					elif event == TimerMessage.QUIT:
 						return
 					else:
@@ -213,6 +223,7 @@ class App:
 		# TODO? add an option to pause timers for X minutes (configurable)
 		menu = Menu(
 			MenuItem("Timers status", self._timers_status, default=True),
+			MenuItem("Reset timers", self._reset_timers),
 			MenuItem("Update screen geometry", self._update_screen_geometries),
 			MenuItem("Quit", self._quit)
 		)
@@ -244,6 +255,11 @@ class App:
 		except Empty:
 			print("Message from timers thread not received")
 			return
+
+
+	def _reset_timers(self):
+		timers_event_queue.put(TimerMessage.RESET_TIMERS)
+		timers_wake_event.set()
 
 
 	def _update_screen_geometries(self):

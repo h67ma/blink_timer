@@ -170,9 +170,19 @@ class TimersThread(Thread):
 		"""Checks if any timer needs to be shown now. If so, shows it (blocking), ignoring remaining timers."""
 		now = timestamp()
 		for timer in self._timers:
-			if now >= timer.next_time:
-				self._activate_timer(timer)
-				break
+			diff = now - timer.next_time
+			if diff > 0:
+				if diff < 10:
+					self._activate_timer(timer)
+					break
+				else:
+					# it's long past the time the timer should've been shown (expected <1s, actual (arbitrary) 10s or
+					# more) - assume the program or PC slept. without this check, a timer would be shown every second
+					# after such sleep, which is unacceptable
+					print("Sleep detected, resetting timers")
+					for timer in self._timers:
+						timer.reset(now)
+					break
 
 
 	def _activate_timer(self, timer: Timer):
